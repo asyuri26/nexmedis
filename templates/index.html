@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JSON Viewer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Stored Data (Data JSON)</h1>
+    <p>List of stored data:</p>
+  <ul id="data-list">
+    {% for item in items %}
+        <li>
+        <strong>{{ item.id }}:</strong> {{ item.name }} - {{ item.description }}
+        <button type ="button" onclick="editItem({{ item.id }}, '{{ item.name }}', '{{ item.description }}')">Edit</button>
+        </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Input ID, Name, & Symptoms(Send Data)</h2>
+  <form action="/receive-json" method="post" id="jsonForm">
+    <label>ID: <input type="number" name="id" required></label><br>
+    <label>Name: <input type="text" name="name" required></label><br>
+    <label>Symptoms: <input type="text" name="description"></label><br>
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    let isEditMode = false;
+    const form = document.getElementById('jsonForm');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const jsonData = Object.fromEntries(formData.entries());
+      jsonData.id = parseInt(jsonData.id);
+
+      const endpoint = isEditMode ? `/modify-json` : '/receive-json';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData)
+      });
+
+      const result = await response.json();
+      alert(result.message);
+      if (response.ok) {
+        window.location.reload();
+      }
+    };
+
+    function editItem(id, name, description) {
+        document.querySelector('input[name="id"]').value = id;
+        document.querySelector('input[name="name"]').value = name;
+        document.querySelector('input[name="description"]').value = description;
+
+        isEditMode = true;
+        submitButton.innerText = 'Update';
+    }
+  </script>
+</body>
+</html>
